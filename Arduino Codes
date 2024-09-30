@@ -1,0 +1,49 @@
+#include "HX711.h" //HX711 kütüphanesi
+const int dt = 10; //HX711 DT çıkışı
+const int sck = 11; //HX711 SCK çıkışı
+HX711 scale; 
+int buzzer=7; //Buzzer'ın pini için değişken 
+float agirlik; //ağırlığın değeri için değişken
+float kalibrasyon = 419640; //Kalibrasyon değeri için değişken
+
+void setup() //Komutları bir kereliğine çalıştıran girdi.
+{
+  Serial.begin(9600); //Seri monitörü 9600 baud hızında çalıştırmak için. Başka baud değeri anlamsız çıktılara sebep olur.
+  pinMode(buzzer, OUTPUT); //Buzzer değişkeni (7) ile pin çıkışı ayarlama.
+  scale.begin(dt, sck); //DT ve SCK pinlerinden veri alımı.
+  Serial.println("HX711 Kalibrasyonu");
+  Serial.println("Tartıda ağırlık varsa lütfen alın.");
+  Serial.println("Ağırlık okuma başladığı zaman lütfen ağırlığı bilinen bir nesne koyunuz.");
+  scale.set_scale();
+  scale.tare(); //Tartıyı 0'a alma
+  long sifir_faktoru = scale.read_average();
+  Serial.print("Sıfır faktörü:"); //Sıfır faktörü tartının kalıcı projeler için dara alma ihtiyacını ortadan kaldırmaya yardımcı oluyor.
+  Serial.println(sifir_faktoru);
+
+}
+void loop() //Komutları döngüde tekrar edecek şekilde çalıştıran girdi.
+{
+  scale.set_scale(kalibrasyon); //Kalibrasyon faktörünü ayarladığımız komut. Manuel bir kalibrasyon değeri ölçtüm.
+  Serial.print("Okunan bilgiler:");
+  weight = scale.get_units(1); 
+    if(agirlik<0) //Eğer ağırlık -5 gibi 0'ın altında bir değer çıkarsa o değeri 0'a eşitleme koşulu.
+  {
+    agirlik=0.00;
+    }
+  
+if (agirlik >= 0.003 && agirlik <= 0.04) //Su kabının ağırlıkları. 0.003kg altı ve 0.04kg arasında bir ağırlık değeri aldığında buzzerın ötmesini sağlayan koşul.
+{
+    digitalWrite(buzzer,HIGH); //Buzzer'a güç göndererek ses çıkarmasını sağladık.
+    delay(1000);                  // 1 saniye boyunca çalmasını söyledik.
+    digitalWrite(buzzer,LOW); //Buzzerın gücünü keserek susmasını sağladık sağladık.
+    delay(1000);                  // 1 saniye boyunca susmasını söyledik.
+} 
+  Serial.print("Kilogram:"); //Seri monitöre yazdırma komutları.
+  Serial.print( agirlik); 
+  Serial.print(" Kg ");
+  Serial.print("Kalibrasyon faktörü: ");
+  Serial.print(kalibrasyon);
+  Serial.println();
+ delay(100);
+
+}
